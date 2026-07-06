@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, CheckCircle2, X, FileVideo, Image as ImageIcon, Loader2, LogOut, ChevronRight, ExternalLink, Copy, Camera, QrCode, AlertTriangle } from "lucide-react";
+import { Upload, CheckCircle2, X, FileVideo, Image as ImageIcon, Loader2, LogOut, ChevronRight, ExternalLink, Copy, Camera, QrCode, AlertTriangle, Users } from "lucide-react";
 import toast from "react-hot-toast";
 import QRCode from "react-qr-code";
 import { uploadMissionData, getParticipantData, getMissionSettingsAPI, getPekaStatsAPI, getPekaResponsesAPI, uploadPekaPhotoAPI } from "../lib/api";
@@ -340,46 +340,17 @@ export default function DashboardTim() {
               </div>
 
               {/* Checklist Edukasi */}
-              <div>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 mb-6 px-2">
-                  <div>
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight">Daftar Responden ({pekaResponses.length})</h3>
-                    <p className="text-sm text-slate-500 font-medium mt-1">Daftar warga yang telah mengisi kuesioner dari link Anda.</p>
-                  </div>
-                  <button onClick={fetchSettings} className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl">
-                     Segarkan Data
-                  </button>
+              <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Total Responden: <span className="text-primary">{pekaResponses.length}</span></h3>
+                  <p className="text-sm text-slate-500 font-medium max-w-md leading-relaxed">Daftar warga yang telah mengisi kuesioner dari link tim Anda. Klik tombol di samping untuk melihat daftar lengkap, mencari nama, dan mengurutkan data.</p>
                 </div>
-                
-                <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
-                  {pekaResponses.length === 0 ? (
-                    <div className="text-center py-16">
-                      <p className="text-slate-500 font-medium">Belum ada masyarakat yang mensubmit kuesioner.</p>
-                    </div>
-                  ) : (
-                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar p-2">
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 sticky top-0 z-10 rounded-xl">
-                          <tr>
-                            <th className="p-4 font-bold text-slate-500 rounded-l-xl uppercase tracking-widest text-xs">Nama Responden</th>
-                            <th className="p-4 font-bold text-slate-500 text-right rounded-r-xl uppercase tracking-widest text-xs">Waktu Submit</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {pekaResponses.map((res, idx) => {
-                            const namaWarga = res.namaWarga || `Responden #${pekaResponses.length - idx}`;
-                            return (
-                              <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                <td className="p-4 font-bold text-slate-900">{namaWarga}</td>
-                                <td className="p-4 font-medium text-slate-500 text-right whitespace-nowrap">{res.timestamp}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
+                <button 
+                  onClick={() => navigate('/responden')} 
+                  className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-2xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 shrink-0"
+                >
+                  <Users size={18} /> Lihat Detail Responden
+                </button>
               </div>
             </div>
           ) : (

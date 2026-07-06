@@ -10,6 +10,7 @@ import AdminStats from "./pages/AdminStats";
 import AdminTimDetail from "./pages/AdminTimDetail";
 import AdminMisi from "./pages/AdminMisi";
 import PilihKategori from "./pages/PilihKategori";
+import RespondenPeka from "./pages/RespondenPeka";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="/pilihkategori" element={<PilihKategori />} />
           <Route path="/dashboard" element={<DashboardTim />} />
           <Route path="/submission/:missionId" element={<SubmissionPage />} />
+          <Route path="/responden" element={<RespondenPeka />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLogin />} />
