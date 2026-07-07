@@ -41,7 +41,7 @@ export default function DashboardTim() {
       const matchId = url.match(/id=([a-zA-Z0-9_-]+)/);
       if (matchId) id = matchId[1];
     }
-    return id ? `https://drive.google.com/uc?export=view&id=${id}` : url;
+    return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1000` : url;
   };
 
   useEffect(() => {
