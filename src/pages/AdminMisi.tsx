@@ -37,6 +37,7 @@ export default function AdminMisi() {
   const [newRequireAll, setNewRequireAll] = useState(false);
   const [newVisibility, setNewVisibility] = useState(true);
   const [newRequiresForm, setNewRequiresForm] = useState(true);
+  const [newFormSchema, setNewFormSchema] = useState("");
 
   useEffect(() => {
     fetchSettings();
@@ -146,6 +147,7 @@ export default function AdminMisi() {
         setNewRequireAll(false);
         setNewVisibility(true);
         setNewRequiresForm(true);
+        setNewFormSchema("");
         setIsCreateFormOpen(false);
         fetchSettings();
       } else {
@@ -299,7 +301,7 @@ export default function AdminMisi() {
                   </div>
 
                   {/* Dynamic Form Builder for New Mission */}
-                  {newRequiresForm && newKategori !== "PeKA" && (
+                  {newRequiresForm && activeCategory !== "PeKA" && (
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-bold text-slate-700">Custom Form Individu</label>
@@ -312,7 +314,7 @@ export default function AdminMisi() {
                     </div>
                   )}
 
-                  {newKategori === "PeKA" && (
+                  {activeCategory === "PeKA" && (
                     <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl mt-4">
                       <label className="text-sm font-bold text-slate-700 block mb-2">Link Pre-filled Google Form</label>
                       <input 
