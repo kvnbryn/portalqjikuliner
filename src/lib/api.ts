@@ -74,7 +74,7 @@ export async function createTeamAPI(nama: string, emails: string) {
 
 export async function uploadMissionData(nama: string, missionId: string | number, fileBase64: string, fileName: string, mimeType: string, description: string = "", memberName: string = "", formResponses: any[] = []) {
   try {
-    const response = await fetch(GAS_URL, {
+    const response = await fetch(DIRECT_GAS_URL || GAS_URL, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain;charset=utf-8",
@@ -310,7 +310,7 @@ export async function uploadPekaPhotoAPI(timestamp: string, namaWarga: string, t
       reader.readAsDataURL(file);
     });
 
-    const response = await fetch(GAS_URL, {
+    const response = await fetch(DIRECT_GAS_URL || GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ 
