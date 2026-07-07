@@ -278,16 +278,16 @@ export default function DashboardTim() {
                 <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col h-full">
                   <div className="mb-4">
                     <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-1">
-                      <Camera size={18} className="text-primary" /> Upload Bukti Foto
+                      <Camera size={18} className="text-primary" /> Upload Bukti Dokumentasi
                     </h3>
-                    <p className="text-sm text-slate-500">Pilih dan upload foto-foto dokumentasi (maks 5MB/foto).</p>
+                    <p className="text-sm text-slate-500">Pilih dan upload file dokumentasi (Foto/Video/PDF, maks 5MB/file).</p>
                   </div>
 
                   <div className="mt-auto relative">
                     <input 
                       type="file" 
                       multiple 
-                      accept="image/*"
+                      accept="*/*"
                       id="peka-bulk-upload"
                       className="hidden"
                       onChange={async (e) => {
@@ -301,18 +301,18 @@ export default function DashboardTim() {
                         if (validFiles.length === 0) return;
 
                         setIsUploadingPhoto("bulk");
-                        const loadingToast = toast.loading(`Mengupload ${validFiles.length} foto...`);
+                        const loadingToast = toast.loading(`Mengupload ${validFiles.length} file...`);
                         
                         try {
                           let successCount = 0;
-                          await Promise.all(validFiles.map(async (file) => {
-                             const timestamp = new Date().toISOString();
+                          await Promise.all(validFiles.map(async (file, index) => {
+                             const timestamp = new Date().toISOString() + "_" + index;
                              const namaWarga = "Bulk Upload";
                              const res = await uploadPekaPhotoAPI(timestamp, namaWarga, userName, file);
                              if (res.status === "success") successCount++;
                           }));
                           
-                          toast.success(`${successCount} dari ${validFiles.length} foto berhasil diupload!`, { id: loadingToast });
+                          toast.success(`${successCount} dari ${validFiles.length} file berhasil diupload!`, { id: loadingToast });
                           fetchSettings();
                         } catch (err) {
                           toast.error("Terjadi kesalahan saat upload.", { id: loadingToast });
@@ -336,8 +336,8 @@ export default function DashboardTim() {
                           <div className="bg-slate-100 p-3 rounded-full text-slate-500">
                             <Upload size={20} />
                           </div>
-                          <span className="text-sm font-bold text-primary">Klik untuk Pilih Foto</span>
-                          <span className="text-xs text-slate-400">Bisa pilih banyak foto sekaligus</span>
+                          <span className="text-sm font-bold text-primary">Klik untuk Pilih File</span>
+                          <span className="text-xs text-slate-400">Bisa pilih banyak file sekaligus</span>
                         </>
                       )}
                     </label>
@@ -359,7 +359,7 @@ export default function DashboardTim() {
                     <div className="w-px h-12 bg-slate-200 hidden sm:block"></div>
                     <div className="text-center sm:text-left">
                        <p className="text-2xl font-bold text-slate-700">{pekaStats.docCount}</p>
-                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Foto Upload</p>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Dokumen Upload</p>
                     </div>
                   </div>
                   
@@ -369,6 +369,52 @@ export default function DashboardTim() {
                   >
                     <Users size={16} /> Lihat Daftar Responden
                   </button>
+                </div>
+
+                {/* Card 4: Galeri Dokumentasi */}
+                <div className="md:col-span-2 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm mt-4">
+                  <h3 className="font-extrabold text-lg mb-6 flex items-center gap-2">
+                    <ImageIcon size={20} className="text-secondary" /> Galeri Dokumentasi
+                  </h3>
+                  
+                  {pekaResponses.filter(r => r.photoUrl).length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-slate-400">
+                      <ImageIcon size={40} className="mb-3 opacity-50" />
+                      <p className="font-medium">Belum ada dokumentasi yang diupload.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {pekaResponses.filter(r => r.photoUrl).map((res) => {
+                        const isVideo = res.photoUrl.toLowerCase().includes('.mp4') || res.photoUrl.toLowerCase().includes('video');
+                        const isPDF = res.photoUrl.toLowerCase().includes('.pdf');
+                        return (
+                          <a 
+                            key={res.responseId} 
+                            href={res.photoUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="group block aspect-square rounded-2xl bg-slate-100 overflow-hidden relative border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                          >
+                            {isVideo || isPDF ? (
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                                {isVideo ? <FileVideo size={40} /> : <FileVideo size={40} />}
+                                <span className="text-xs font-bold mt-2 text-slate-500 group-hover:text-primary transition-colors truncate w-3/4 text-center">
+                                  {res.namaWarga}
+                                </span>
+                              </div>
+                            ) : (
+                              <>
+                                <img src={res.photoUrl} alt={res.namaWarga} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                  <span className="text-white text-xs font-bold truncate w-full">{res.namaWarga}</span>
+                                </div>
+                              </>
+                            )}
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

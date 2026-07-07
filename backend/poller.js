@@ -144,6 +144,33 @@ async function syncAllData() {
           }
         }
 
+        // Include loose photos from Data PeKA (like Bulk Upload)
+        if (pekaData && pekaData.length > 1) {
+          for (let i = 1; i < pekaData.length; i++) {
+            const timestampStr = pekaData[i][0] ? pekaData[i][0].toString() : "";
+            const teamNameStr = pekaData[i][1] ? pekaData[i][1].toString() : "";
+            const namaWargaStr = pekaData[i][2] ? pekaData[i][2].toString() : "";
+            const photoUrlStr = pekaData[i][3] ? pekaData[i][3].toString() : "";
+            
+            if (timestampStr && namaWargaStr) {
+              const key = timestampStr + "_" + namaWargaStr;
+              // Check if it's already in responses
+              const exists = responses.some(r => r.responseId === key);
+              if (!exists && photoUrlStr) {
+                responses.push({
+                  timestamp: timestampStr,
+                  teamName: teamNameStr,
+                  namaWarga: namaWargaStr,
+                  responseId: key,
+                  responsesJSON: [],
+                  photoUrl: photoUrlStr,
+                  skor: null
+                });
+              }
+            }
+          }
+        }
+
         db.prepare('DELETE FROM peka_responses').run();
         const insertPeka = db.prepare('INSERT INTO peka_responses (team_name, response_id, data_json) VALUES (?, ?, ?)');
         for (const res of responses) {

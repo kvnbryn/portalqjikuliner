@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Clock, Image as ImageIcon, Video, ExternalLink, Loader2, Maximize2, X, FileText, UserCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Image as ImageIcon, Video, ExternalLink, Loader2, Maximize2, X, FileText, UserCircle, AlertTriangle, FileVideo } from "lucide-react";
 import toast from "react-hot-toast";
 import { getParticipantData, getMissionFiles, getMissionSettingsAPI, getPekaStatsAPI, getPekaResponsesAPI } from "../lib/api";
 
@@ -399,7 +399,7 @@ export default function AdminTimDetail() {
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Dokumentasi Diupload</div>
                 </div>
               </div>
-              </div>
+            </div>
 
             <div className="bg-surface rounded-3xl p-6 shadow-sm border border-border">
               <h3 className="font-extrabold text-lg mb-6">Detail Responden Edukasi PeKA</h3>
@@ -428,7 +428,6 @@ export default function AdminTimDetail() {
                           )}
                         </div>
                         
-                        
                         <div className="mt-3 pt-3 border-t border-slate-100 space-y-2 grow">
                           {Array.isArray(res.responsesJSON) && res.responsesJSON.slice(0, 2).map((ans: any, j: number) => (
                             <div key={j}>
@@ -447,6 +446,52 @@ export default function AdminTimDetail() {
                           )}
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Galeri Dokumentasi Admin */}
+            <div className="bg-surface rounded-3xl p-6 shadow-sm border border-border mt-8">
+              <h3 className="font-extrabold text-lg mb-6 flex items-center gap-2">
+                <ImageIcon size={20} className="text-secondary" /> Dokumentasi Terkumpul
+              </h3>
+              
+              {pekaResponses.filter(r => r.photoUrl).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-slate-400">
+                  <ImageIcon size={40} className="mb-3 opacity-50" />
+                  <p className="font-medium">Tim ini belum mengunggah dokumen/foto apapun.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {pekaResponses.filter(r => r.photoUrl).map((res) => {
+                    const isVideo = res.photoUrl.toLowerCase().includes('.mp4') || res.photoUrl.toLowerCase().includes('video');
+                    const isPDF = res.photoUrl.toLowerCase().includes('.pdf');
+                    return (
+                      <a 
+                        key={res.responseId} 
+                        href={res.photoUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="group block aspect-square rounded-2xl bg-slate-100 overflow-hidden relative border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                      >
+                        {isVideo || isPDF ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                            {isVideo ? <FileVideo size={40} /> : <FileVideo size={40} />}
+                            <span className="text-xs font-bold mt-2 text-slate-500 group-hover:text-primary transition-colors truncate w-3/4 text-center">
+                              {res.namaWarga}
+                            </span>
+                          </div>
+                        ) : (
+                          <>
+                            <img src={res.photoUrl} alt={res.namaWarga} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                              <span className="text-white text-xs font-bold truncate w-full">{res.namaWarga}</span>
+                            </div>
+                          </>
+                        )}
+                      </a>
                     );
                   })}
                 </div>
