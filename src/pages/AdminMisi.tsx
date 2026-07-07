@@ -25,6 +25,10 @@ export default function AdminMisi() {
   const [isCreating, setIsCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [isSavingBulk, setIsSavingBulk] = useState(false);
+  const [saveProgress, setSaveProgress] = useState({ current: 0, total: 0 });
+
+  const isChecked = (val: any) => val !== false && val !== "FALSE" && val !== "false" && val !== 0 && val !== "0";
 
   // New Mission Form State
   const [newDesc, setNewDesc] = useState("");
@@ -54,20 +58,50 @@ export default function AdminMisi() {
     }
   };
 
-  const handleSave = async (setting: MissionSetting) => {
-    setSavingId(setting.id);
+  const handleBulkSave = async () => {
+    const targetSettings = settings.filter(s => s.kategori === activeCategory);
+    if (targetSettings.length === 0) {
+      toast.error("Tidak ada misi untuk disimpan di kategori ini.");
+      return;
+    }
+    
+    setIsSavingBulk(true);
+    setSaveProgress({ current: 0, total: targetSettings.length });
+    
+    let successCount = 0;
+    
     try {
-      const res = await updateMissionSettingAPI(setting.id, setting.deskripsi, setting.deadline, setting.statusManual, setting.kategori, setting.formSchema, setting.visibility, setting.requiresForm);
-      if (res.status === "success") {
-        toast.success(`Pengaturan berhasil disimpan!`);
-        fetchSettings();
-      } else {
-        toast.error(`Gagal menyimpan: ${res.message}`);
+      for (let i = 0; i < targetSettings.length; i++) {
+        const setting = targetSettings[i];
+        setSaveProgress({ current: i + 1, total: targetSettings.length });
+        
+        const res = await updateMissionSettingAPI(
+          setting.id, 
+          setting.deskripsi, 
+          setting.deadline, 
+          setting.statusManual, 
+          setting.kategori, 
+          setting.formSchema, 
+          isChecked(setting.visibility), 
+          isChecked(setting.requiresForm)
+        );
+        
+        if (res.status === "success") {
+          successCount++;
+        }
       }
+      
+      if (successCount === targetSettings.length) {
+        toast.success(`Berhasil menyimpan ${successCount} misi sekaligus!`);
+      } else {
+        toast.error(`Berhasil menyimpan ${successCount} dari ${targetSettings.length} misi. Coba lagi.`);
+      }
+      
+      fetchSettings();
     } catch (error) {
-      toast.error("Terjadi kesalahan jaringan.");
+      toast.error("Terjadi kesalahan jaringan saat menyimpan massal.");
     } finally {
-      setSavingId(null);
+      setIsSavingBulk(false);
     }
   };
 
@@ -179,7 +213,15 @@ export default function AdminMisi() {
 
       {/* Action Bar & Create Form */}
       <div>
-        <div className="flex justify-end mb-4">
+        <div className="flex flex-col-reverse sm:flex-row justify-end mb-4 gap-3">
+          <button
+            onClick={handleBulkSave}
+            disabled={isSavingBulk || filteredSettings.length === 0}
+            className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSavingBulk ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+            {isSavingBulk ? `Menyimpan (${saveProgress.current}/${saveProgress.total})...` : 'Simpan Semua Perubahan'}
+          </button>
           <button
             onClick={() => setIsCreateFormOpen(!isCreateFormOpen)}
             className="flex items-center gap-2 bg-secondary hover:bg-[#F2A93B] text-primary-dark px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md"
@@ -384,7 +426,7 @@ export default function AdminMisi() {
                       <label className="flex items-center gap-3 p-4 bg-slate-50/50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors shadow-inner">
                         <input 
                           type="checkbox" 
-                          checked={setting.visibility !== false} 
+                          checked={isChecked(setting.visibility)} 
                           onChange={(e) => handleChange(setting.id, 'visibility', e.target.checked as any)} 
                           className="accent-primary w-5 h-5"
                         />
@@ -396,7 +438,7 @@ export default function AdminMisi() {
                       <label className="flex items-center gap-3 p-4 bg-slate-50/50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors shadow-inner">
                         <input 
                           type="checkbox" 
-                          checked={setting.requiresForm !== false} 
+                          checked={isChecked(setting.requiresForm)} 
                           onChange={(e) => handleChange(setting.id, 'requiresForm', e.target.checked as any)} 
                           className="accent-primary w-5 h-5"
                         />
@@ -408,7 +450,7 @@ export default function AdminMisi() {
                     </div>
 
                     {/* Dynamic Form Builder for Existing Mission */}
-                    {setting.requiresForm !== false && setting.kategori !== "PeKA" && (
+                    {isChecked(setting.requiresForm) && setting.kategori !== "PeKA" && (
                       <div className="pt-2">
                         <div className="flex items-center justify-between mb-2">
                           <label className="text-xs tracking-wider uppercase font-bold text-slate-400">Custom Form Individu</label>
@@ -479,14 +521,7 @@ export default function AdminMisi() {
                       {deletingId === setting.id ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
                       <span className="hidden sm:inline">Hapus</span>
                     </button>
-                    <button
-                      onClick={() => handleSave(setting)}
-                      disabled={savingId === setting.id}
-                      className="flex items-center gap-2 bg-slate-900 hover:bg-primary-dark text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg"
-                    >
-                      {savingId === setting.id ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-                      Simpan Perubahan
-                    </button>
+                    {/* Tombol Simpan Perubahan individu dihapus karena sekarang menggunakan Simpan Semua (Bulk Save) */}
                   </div>
                 </div>
               </motion.div>
