@@ -29,6 +29,8 @@ export default function SubmissionPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
 
+  const isChecked = (val: any) => val !== false && val !== "FALSE" && val !== "false" && val !== 0 && val !== "0";
+
   useEffect(() => {
     const teamName = localStorage.getItem("tim_name");
     const member = localStorage.getItem("tim_member");
@@ -134,7 +136,7 @@ export default function SubmissionPage() {
     
     // Check form validity only if hasn't submitted
     let formResponsesArr: any[] = [];
-    if (!hasSubmittedForm && missionSetting?.requiresForm !== false && formSchema.length > 0) {
+    if (!hasSubmittedForm && missionSetting && isChecked(missionSetting.requiresForm) && formSchema.length > 0) {
       for (const field of formSchema) {
         if (field.required && (!formResponses[field.id] || formResponses[field.id].trim() === "")) {
           toast.error(`Wajib mengisi pertanyaan form: ${field.question}`);
@@ -265,7 +267,7 @@ export default function SubmissionPage() {
         <div className="space-y-8">
           
           {/* BAGIAN 1: KUESIONER (Ditampilkan hanya jika ada form dan requiresForm aktif) */}
-          {missionSetting?.requiresForm !== false && formSchema.length > 0 && (
+          {isChecked(missionSetting?.requiresForm) && formSchema.length > 0 && (
             <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100">
               <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h2 className="text-xl font-black text-secondary flex items-center gap-3">

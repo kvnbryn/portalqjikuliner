@@ -44,6 +44,8 @@ export default function DashboardTim() {
     return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1000` : url;
   };
 
+  const isChecked = (val: any) => val !== false && val !== "FALSE" && val !== "false" && val !== 0 && val !== "0";
+
   useEffect(() => {
     const name = localStorage.getItem("tim_name");
     if (!name) {
@@ -73,7 +75,7 @@ export default function DashboardTim() {
         
         // If it's PeKA, also fetch stats
         if (kategori === "PeKA") {
-          const pekaMission = res.data.find(m => m.kategori === "PeKA" && m.visibility !== false);
+          const pekaMission = res.data.find(m => m.kategori === "PeKA" && isChecked(m.visibility));
           if (pekaMission) {
              const statsRes = await getPekaStatsAPI(pekaMission.id);
              if (statsRes.status === "success" && Array.isArray(statsRes.data)) {
@@ -144,7 +146,7 @@ export default function DashboardTim() {
     return `${d > 0 ? d + ' hari ' : ''}${h}:${m}:${s}`;
   };
 
-  const filteredSettings = missionSettings.filter(m => m.kategori === kategori && m.visibility !== false);
+  const filteredSettings = missionSettings.filter(m => m.kategori === kategori && isChecked(m.visibility));
   
   // Perhitungan progres diperbarui: 
   // Jika misi requireAll, maka progres = jumlah member yang submit === 3?

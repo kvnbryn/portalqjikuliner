@@ -89,6 +89,11 @@ export default function AdminMisi() {
         if (res.status === "success") {
           successCount++;
         }
+        
+        // Add 1 second delay between requests to avoid Google Apps Script rate limiting
+        if (i < targetSettings.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
       
       if (successCount === targetSettings.length) {
