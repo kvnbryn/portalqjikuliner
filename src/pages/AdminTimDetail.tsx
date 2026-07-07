@@ -302,14 +302,16 @@ export default function AdminTimDetail() {
                       {missionFiles.map((file, idx) => {
                         const isImage = file.mimeType.includes("image");
                         const isVideo = file.mimeType.includes("video");
+                        // Use thumbnail bypass for images, otherwise use original downloadUrl
+                        const displayUrl = isImage ? `https://drive.google.com/thumbnail?id=${file.id}&sz=w1000` : file.downloadUrl;
 
                         return (
                           <div key={idx} className="group relative bg-white border border-border rounded-2xl overflow-hidden hover:border-primary/30 transition-all hover:shadow-md">
                             {isImage ? (
                               <div className="h-40 w-full overflow-hidden bg-slate-100 relative">
-                                <img src={file.downloadUrl} alt={file.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                <img src={displayUrl} alt={file.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <button onClick={() => setLightboxImg(file.downloadUrl)} className="bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-primary transition-colors">
+                                  <button onClick={() => setLightboxImg(displayUrl)} className="bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-primary transition-colors">
                                     <Maximize2 size={20} />
                                   </button>
                                 </div>

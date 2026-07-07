@@ -248,13 +248,20 @@ export default function SubmissionPage() {
                      <Info size={12} /> Wajib Seluruh Anggota
                    </span>
                  )}
+                 {missionSetting.statusManual === "Closed" && (
+                    <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold tracking-wider flex items-center gap-1 shadow-sm">
+                      <Info size={12} /> Misi Ditutup
+                    </span>
+                 )}
                </div>
                <h1 className="text-3xl font-extrabold tracking-tight mb-2">Penyerahan Tugas</h1>
                <p className="text-white/80 font-medium">Tim: {userName} • Akses: {memberIdentity}</p>
              </div>
            </div>
          </div>
-      </header>      <main className="max-w-4xl mx-auto px-4 sm:px-6 -mt-8 relative z-20">
+      </header>
+      
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 -mt-8 relative z-20">
         
         {/* Info Misi */}
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-xl shadow-slate-200/50 border border-white mb-8 prose prose-sm max-w-none text-slate-700">
@@ -264,6 +271,23 @@ export default function SubmissionPage() {
            <div className="text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: missionSetting.deskripsi }} />
         </div>
 
+        {missionSetting.statusManual === "Closed" || (missionSetting.deadline && new Date() > new Date(missionSetting.deadline)) ? (
+          <div className="bg-white rounded-3xl p-10 shadow-sm border border-slate-100 text-center flex flex-col items-center">
+            <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
+              <X size={40} />
+            </div>
+            <h2 className="text-2xl font-black text-slate-800 mb-2">Misi Telah Ditutup</h2>
+            <p className="text-slate-500 max-w-md mx-auto">
+              Maaf, pengumpulan untuk misi ini sudah tidak dapat dilakukan karena status misi telah ditutup oleh Admin atau batas waktu telah berakhir.
+            </p>
+            <button 
+              onClick={() => navigate(`/dashboard?kategori=${kategori}`)}
+              className="mt-8 px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors"
+            >
+              Kembali ke Dashboard
+            </button>
+          </div>
+        ) : (
         <div className="space-y-8">
           
           {/* BAGIAN 1: KUESIONER (Ditampilkan hanya jika ada form dan requiresForm aktif) */}
@@ -447,6 +471,7 @@ export default function SubmissionPage() {
              </button>
           </div>
         </div>
+        )}
       </main>
     </div>
   );

@@ -128,12 +128,12 @@ export async function getParticipantData(nama: string) {
 
 export async function getMissionFiles(folderUrl: string) {
   try {
-    const response = await fetch(GAS_URL, {
+    const response = await fetch(DIRECT_GAS_URL || GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "getMissionFiles", folderUrl: folderUrl })
     });
-    return await response.json();
+    return await safeJson(response);
   } catch (error) {
     console.error("Error fetching mission files:", error);
     throw error;
