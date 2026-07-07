@@ -1,4 +1,4 @@
-﻿# Logs
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -24,4 +24,6 @@ dist-ssr
 *.sw?
 backend/credentials.json
 
-
+# Database files
+*.sqlite
+*.sqlite-*
