@@ -403,7 +403,7 @@ export default function SubmissionPage() {
                         <div key={i} className="group relative bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-primary/40 transition-all hover:shadow-sm cursor-pointer flex flex-col">
                           {isImage ? (
                             <a href={f.downloadUrl} target="_blank" rel="noreferrer" className="block h-24 w-full overflow-hidden bg-slate-200 relative shrink-0">
-                              <img src={f.downloadUrl} alt="thumb" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                              <img src={`https://drive.google.com/thumbnail?id=${f.id}&sz=w500`} alt="thumb" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                             </a>
                           ) : (
                             <a href={f.downloadUrl} target="_blank" rel="noreferrer" className="h-24 w-full bg-slate-100 flex flex-col items-center justify-center text-slate-400 group-hover:text-primary transition-colors shrink-0">
