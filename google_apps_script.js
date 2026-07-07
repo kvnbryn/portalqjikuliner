@@ -256,7 +256,7 @@ function handleUpload(data) {
     
     if (colIndex === -1) {
        // Fallback kalau kolom misinya ilang
-       colIndex = sheetTim.getLastColumn() + 1;
+       colIndex = Math.max(sheetTim.getLastColumn() + 1, 5); // Pastikan misi mulai dari kolom E (5) ke atas
        sheetTim.getRange(1, colIndex).setValue(`Misi - ${category} (ID: ${missionId})`);
        sheetTim.getRange(1, colIndex).setFontWeight("bold").setBackground("#f59e0b").setFontColor("white");
     }
@@ -356,10 +356,10 @@ function handleUpload(data) {
 
 function parseTimMissions(row, headers) {
   const missions = {};
-  for (let c = 4; c < headers.length; c++) {
+  for (let c = 0; c < headers.length; c++) {
     const colName = headers[c];
-    if (colName && colName.includes("(ID: ")) {
-      const idMatch = colName.match(/\(ID: (.*?)\)/);
+    if (colName && colName.toString().includes("(ID: ")) {
+      const idMatch = colName.toString().match(/\(ID: (.*?)\)/);
       if (idMatch && idMatch[1]) {
         const misiId = idMatch[1];
         const cellContent = row[c] ? row[c].toString() : "";
@@ -394,13 +394,18 @@ function getParticipantData(nama) {
   if (timData.length < 1) return respondError("Data kosong");
   
   const headers = timData[0];
+  let emailCol = 3;
+  for (let c=0; c<headers.length; c++) {
+    if (headers[c].toString().toLowerCase().includes("email")) emailCol = c;
+  }
+  
   for (let i = 1; i < timData.length; i++) {
     if (timData[i][1] === nama) {
       return respondSuccess({
         "Timestamp": timData[i][0],
         "Nama Tim": timData[i][1],
         "Folder ID Tim": timData[i][2],
-        "Email Akses": timData[i][3],
+        "Email Akses": timData[i][emailCol],
         "missions": parseTimMissions(timData[i], headers)
       });
     }
@@ -419,12 +424,17 @@ function getAllData() {
   const headers = timData[0];
   const participants = [];
   
+  let emailCol = 3;
+  for (let c=0; c<headers.length; c++) {
+    if (headers[c].toString().toLowerCase().includes("email")) emailCol = c;
+  }
+  
   for (let i = 1; i < timData.length; i++) {
     participants.push({
       "Timestamp": timData[i][0],
       "Nama Tim": timData[i][1],
       "Folder ID Tim": timData[i][2],
-      "Email Akses": timData[i][3],
+      "Email Akses": timData[i][emailCol],
       "missions": parseTimMissions(timData[i], headers)
     });
   }

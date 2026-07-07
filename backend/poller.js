@@ -4,10 +4,10 @@ const db = require('./db');
 // helper function to simulate parseTimMissions
 function parseTimMissions(row, headers) {
   const missions = {};
-  for (let c = 4; c < headers.length; c++) {
+  for (let c = 0; c < headers.length; c++) {
     const colName = headers[c];
-    if (colName && colName.includes("(ID: ")) {
-      const idMatch = colName.match(/\(ID: (.*?)\)/);
+    if (colName && colName.toString().includes("(ID: ")) {
+      const idMatch = colName.toString().match(/\(ID: (.*?)\)/);
       if (idMatch && idMatch[1]) {
         const misiId = idMatch[1];
         const cellContent = row[c] ? row[c].toString() : "";
