@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { LogIn, ShieldAlert, Loader2 } from "lucide-react";
@@ -9,6 +9,13 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const isAdminLoggedIn = sessionStorage.getItem("admin_auth");
+    if (isAdminLoggedIn === "true") {
+      navigate("/admin/dashboard");
+    }
+  }, [navigate]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

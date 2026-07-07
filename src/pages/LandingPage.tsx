@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
@@ -10,6 +10,13 @@ export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedTimName = localStorage.getItem("tim_name");
+    if (savedTimName) {
+      navigate("/pilihkategori");
+    }
+  }, [navigate]);
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     setIsLoading(true);
