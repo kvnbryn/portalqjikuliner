@@ -72,6 +72,18 @@ export default function AdminTimDetail() {
   const [pekaResponses, setPekaResponses] = useState<any[]>([]);
   const [selectedRespondent, setSelectedRespondent] = useState<any>(null);
 
+  const getDriveDirectUrl = (url: string) => {
+    if (!url) return "";
+    let id = "";
+    const matchD = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (matchD) id = matchD[1];
+    else {
+      const matchId = url.match(/id=([a-zA-Z0-9_-]+)/);
+      if (matchId) id = matchId[1];
+    }
+    return id ? `https://drive.google.com/uc?export=view&id=${id}` : url;
+  };
+
   useEffect(() => {
     if (name) {
       fetchData(name);
@@ -404,15 +416,15 @@ export default function AdminTimDetail() {
             <div className="bg-surface rounded-3xl p-6 shadow-sm border border-border">
               <h3 className="font-extrabold text-lg mb-6">Detail Responden Edukasi PeKA</h3>
               
-              {pekaResponses.length === 0 ? (
+              {pekaResponses.filter(r => r.responsesJSON && r.responsesJSON.length > 0).length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48 bg-slate-50 border border-dashed border-border rounded-2xl text-slate-400">
                   <Clock size={40} className="mb-3" />
                   <p className="font-medium">Belum ada data responden edukasi.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {pekaResponses.map((res, i) => {
-                    const namaWarga = res.namaWarga || `Responden #${pekaResponses.length - i}`;
+                  {pekaResponses.filter(r => r.responsesJSON && r.responsesJSON.length > 0).map((res, i, arr) => {
+                    const namaWarga = res.namaWarga || `Responden #${arr.length - i}`;
                     
                     return (
                       <div key={res.responseId} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col h-full">
@@ -471,10 +483,16 @@ export default function AdminTimDetail() {
                     return (
                       <a 
                         key={res.responseId} 
-                        href={res.photoUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="group block aspect-square rounded-2xl bg-slate-100 overflow-hidden relative border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (isVideo || isPDF) {
+                            window.open(res.photoUrl, "_blank");
+                          } else {
+                            setLightboxImg(getDriveDirectUrl(res.photoUrl));
+                          }
+                        }}
+                        className="group block aspect-square rounded-2xl bg-slate-100 overflow-hidden relative border border-slate-200 hover:border-primary hover:shadow-md transition-all cursor-pointer"
                       >
                         {isVideo || isPDF ? (
                           <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
@@ -485,7 +503,7 @@ export default function AdminTimDetail() {
                           </div>
                         ) : (
                           <>
-                            <img src={res.photoUrl} alt={res.namaWarga} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            <img src={getDriveDirectUrl(res.photoUrl)} alt={res.namaWarga} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
                               <span className="text-white text-xs font-bold truncate w-full">{res.namaWarga}</span>
                             </div>

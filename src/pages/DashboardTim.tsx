@@ -30,6 +30,19 @@ export default function DashboardTim() {
   const [pekaResponses, setPekaResponses] = useState<any[]>([]);
   const [showQrCode, setShowQrCode] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState<string | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
+  const getDriveDirectUrl = (url: string) => {
+    if (!url) return "";
+    let id = "";
+    const matchD = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (matchD) id = matchD[1];
+    else {
+      const matchId = url.match(/id=([a-zA-Z0-9_-]+)/);
+      if (matchId) id = matchId[1];
+    }
+    return id ? `https://drive.google.com/uc?export=view&id=${id}` : url;
+  };
 
   useEffect(() => {
     const name = localStorage.getItem("tim_name");
@@ -307,7 +320,7 @@ export default function DashboardTim() {
                           let successCount = 0;
                           await Promise.all(validFiles.map(async (file, index) => {
                              const timestamp = new Date().toISOString() + "_" + index;
-                             const namaWarga = "Bulk Upload";
+                             const namaWarga = file.name;
                              const res = await uploadPekaPhotoAPI(timestamp, namaWarga, userName, file);
                              if (res.status === "success") successCount++;
                           }));
@@ -348,7 +361,7 @@ export default function DashboardTim() {
                 <div className="md:col-span-2 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
                   <div className="flex-1 flex gap-6 sm:gap-10 items-center justify-center sm:justify-start w-full">
                     <div className="text-center sm:text-left">
-                       <p className="text-4xl font-black text-slate-900">{pekaResponses.length}</p>
+                       <p className="text-4xl font-black text-slate-900">{pekaResponses.filter(r => r.responsesJSON && r.responsesJSON.length > 0).length}</p>
                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Total Responden</p>
                     </div>
                     <div className="w-px h-12 bg-slate-200 hidden sm:block"></div>
@@ -390,10 +403,16 @@ export default function DashboardTim() {
                         return (
                           <a 
                             key={res.responseId} 
-                            href={res.photoUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="group block aspect-square rounded-2xl bg-slate-100 overflow-hidden relative border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (isVideo || isPDF) {
+                                window.open(res.photoUrl, "_blank");
+                              } else {
+                                setLightboxImage(getDriveDirectUrl(res.photoUrl));
+                              }
+                            }}
+                            className="group block aspect-square rounded-2xl bg-slate-100 overflow-hidden relative border border-slate-200 hover:border-primary hover:shadow-md transition-all cursor-pointer"
                           >
                             {isVideo || isPDF ? (
                               <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
@@ -404,7 +423,7 @@ export default function DashboardTim() {
                               </div>
                             ) : (
                               <>
-                                <img src={res.photoUrl} alt={res.namaWarga} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                <img src={getDriveDirectUrl(res.photoUrl)} alt={res.namaWarga} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
                                   <span className="text-white text-xs font-bold truncate w-full">{res.namaWarga}</span>
                                 </div>
@@ -554,6 +573,37 @@ export default function DashboardTim() {
                 className="w-full bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-md"
               >
                 Tutup QR Code
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {lightboxImage && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setLightboxImage(null)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-md cursor-zoom-out"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative z-10 max-w-5xl w-full h-full flex flex-col items-center justify-center pointer-events-none"
+            >
+              <img 
+                src={lightboxImage} 
+                className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl pointer-events-auto"
+                alt="Enlarged view"
+              />
+              <button 
+                onClick={() => setLightboxImage(null)}
+                className="absolute top-4 right-4 sm:top-8 sm:right-8 text-white hover:text-red-400 bg-black/50 hover:bg-black/80 p-3 rounded-full transition-all pointer-events-auto backdrop-blur-sm"
+              >
+                <X size={24} />
               </button>
             </motion.div>
           </div>
