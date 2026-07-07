@@ -41,6 +41,8 @@ export default function RespondenPeka() {
   // Filter and sort logic
   const filteredAndSortedResponses = useMemo(() => {
     let filtered = responses.filter((res) => {
+      // Hanya tampilkan responden asli (yang mengisi form), abaikan foto dokumentasi lepas
+      if (!res.responsesJSON || res.responsesJSON.length === 0) return false;
       const nama = (res.namaWarga || "").toLowerCase();
       return nama.includes(searchQuery.toLowerCase());
     });
