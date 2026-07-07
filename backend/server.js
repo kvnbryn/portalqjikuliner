@@ -97,12 +97,26 @@ app.post('/api', async (req, res) => {
     }
 
     // --- 3. LOW TRAFFIC ADMIN WRITES (Proxy directly to GAS) ---
-    // Actions like register, loginWithEmail, createTeam, upload, createMission, updateMissionSetting, etc.
+    // High-traffic actions like submitPekaForm and upload will be queued
+    const queuedActions = ['submitPekaForm', 'upload', 'register', 'createTeam'];
     
+    if (queuedActions.includes(action)) {
+      console.log(`[Queue] Queuing action '${action}'...`);
+      const stmt = db.prepare(`
+        INSERT INTO action_queue (action_name, payload_json)
+        VALUES (?, ?)
+      `);
+      stmt.run(action, JSON.stringify(data));
+      return res.json({ status: 'success', message: 'Action berhasil dimasukkan ke antrean' });
+    }
+
+    // Pass-through for other admin actions (like updateMissionSetting, getPekaStats)
     if (GAS_URL) {
       console.log("[Proxy] Forwarding action '" + action + "' to GAS...");
       const gasResponse = await axios.post(GAS_URL, data, {
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       });
       return res.json(gasResponse.data);
     } else {

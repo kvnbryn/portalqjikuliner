@@ -1,55 +1,82 @@
 const db = require('./db');
-const { uploadFileToDrive } = require('./googleService');
+const axios = require('axios');
 const path = require('path');
+const fs = require('fs');
 
-const MAIN_FOLDER_ID = process.env.MAIN_FOLDER_ID;
+const GAS_URL = process.env.GAS_URL;
 
 async function processQueue() {
+  if (!GAS_URL) {
+    console.error('[Worker] Error: GAS_URL is not set in .env');
+    return;
+  }
+
   try {
-    // Find one pending photo
-    const row = db.prepare("SELECT * FROM photo_queue WHERE status = 'pending' ORDER BY id ASC LIMIT 1").get();
-
-    if (row) {
-      console.log(`[Worker] Processing upload queue ID: ${row.id} for team ${row.team_name}`);
-
-      // Update status to processing
-      db.prepare("UPDATE photo_queue SET status = 'processing' WHERE id = ?").run(row.id);
-
+    // 1. Process Action Queue (General API Requests)
+    const actionRow = db.prepare("SELECT * FROM action_queue WHERE status = 'pending' ORDER BY id ASC LIMIT 1").get();
+    
+    if (actionRow) {
+      console.log(`[Worker] Processing action queue ID: ${actionRow.id} (Action: ${actionRow.action_name})`);
+      db.prepare("UPDATE action_queue SET status = 'processing' WHERE id = ?").run(actionRow.id);
+      
       try {
-        // Upload to Drive
-        // In a real scenario, we should find the team's specific folder ID from the 'teams' table
-        // For simplicity, we'll just upload to the main folder for now, or find the team folder ID
-        let targetFolderId = MAIN_FOLDER_ID;
-        const teamRow = db.prepare("SELECT data_json FROM teams WHERE name = ?").get(row.team_name);
-        if (teamRow) {
-          const teamData = JSON.parse(teamRow.data_json);
-          if (teamData['Folder ID Tim']) {
-            targetFolderId = teamData['Folder ID Tim'];
-          }
-        }
+        const payload = JSON.parse(actionRow.payload_json);
+        await axios.post(GAS_URL, payload, {
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity
+        });
+        
+        db.prepare("UPDATE action_queue SET status = 'completed' WHERE id = ?").run(actionRow.id);
+        console.log(`[Worker] Successfully sent action queue ID: ${actionRow.id}`);
+      } catch (err) {
+        console.error(`[Worker] Error sending action queue ID ${actionRow.id}:`, err.message);
+        db.prepare("UPDATE action_queue SET status = 'pending', error_message = ? WHERE id = ?").run(err.message, actionRow.id);
+      }
+    }
 
-        const fileName = `${row.timestamp}_${row.nama_warga}_${path.basename(row.local_file_path)}`;
+    // 2. Process Photo Queue (Forward to GAS to bypass Service Account quota)
+    const photoRow = db.prepare("SELECT * FROM photo_queue WHERE status = 'pending' ORDER BY id ASC LIMIT 1").get();
+    
+    if (photoRow) {
+      console.log(`[Worker] Processing photo queue ID: ${photoRow.id} for team ${photoRow.team_name}`);
+      db.prepare("UPDATE photo_queue SET status = 'processing' WHERE id = ?").run(photoRow.id);
+      
+      try {
+        // Read file and convert to base64
+        const fileData = fs.readFileSync(photoRow.local_file_path, { encoding: 'base64' });
+        const fileName = `${photoRow.timestamp}_${photoRow.nama_warga}_${path.basename(photoRow.local_file_path)}`;
 
-        const url = await uploadFileToDrive(row.local_file_path, fileName, row.mime_type, targetFolderId);
+        const gasPayload = {
+          action: "uploadPekaPhoto",
+          timestamp: photoRow.timestamp,
+          namaWarga: photoRow.nama_warga,
+          teamName: photoRow.team_name,
+          fileData: fileData,
+          fileName: fileName,
+          mimeType: photoRow.mime_type
+        };
 
-        // Mark as completed
-        db.prepare("UPDATE photo_queue SET status = 'completed' WHERE id = ?").run(row.id);
-        console.log(`[Worker] Successfully uploaded queue ID: ${row.id}`);
+        // Send directly to GAS to use User's 15GB Quota instead of Service Account
+        await axios.post(GAS_URL, gasPayload, {
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity
+        });
 
-        // Note: In full implementation, we also need to append this to Data PeKA sheet
-
+        db.prepare("UPDATE photo_queue SET status = 'completed' WHERE id = ?").run(photoRow.id);
+        console.log(`[Worker] Successfully forwarded photo queue ID: ${photoRow.id} to GAS`);
       } catch (uploadError) {
-        console.error(`[Worker] Error uploading ID ${row.id}:`, uploadError);
-        // Revert to pending for retry later
-        db.prepare("UPDATE photo_queue SET status = 'pending', error_message = ? WHERE id = ?").run(uploadError.message, row.id);
+        console.error(`[Worker] Error uploading photo ID ${photoRow.id}:`, uploadError.message);
+        db.prepare("UPDATE photo_queue SET status = 'pending', error_message = ? WHERE id = ?").run(uploadError.message, photoRow.id);
       }
     }
   } catch (err) {
-    console.error('[Worker] Queue Error:', err.message);
+    console.error('[Worker] Queue Check Error:', err.message);
   }
 }
 
-// Run queue worker every 5 seconds
-setInterval(processQueue, 5000);
+// Run queue worker every 2 seconds for faster processing of forms
+setInterval(processQueue, 2000);
 
 module.exports = { processQueue };

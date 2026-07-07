@@ -52,6 +52,18 @@ const initDb = () => {
       last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Table for General API Queue (submitPekaForm, upload, etc)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS action_queue (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      action_name TEXT,
+      payload_json TEXT,
+      status TEXT DEFAULT 'pending',
+      error_message TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 };
 
 initDb();

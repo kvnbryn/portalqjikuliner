@@ -27,3 +27,8 @@ backend/credentials.json
 # Database files
 *.sqlite
 *.sqlite-*
+backend/credensial.json
+backend/qji_database.sqlite-wal
+backend/qji_database.sqlite-shm
+backend/qji_database.sqlite
+backend_final.zip
