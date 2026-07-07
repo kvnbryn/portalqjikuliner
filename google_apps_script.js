@@ -242,70 +242,31 @@ function handleUpload(data) {
     
     if (!missionFound) return respondError("Misi tidak valid");
     
-    // CARI KOLOM DI DATA TIM (Nyari ID Misi di Header)
-    let sheetTim = ss.getSheetByName("Data Tim");
-    const headers = sheetTim.getRange(1, 1, 1, sheetTim.getLastColumn()).getValues()[0];
-    let colIndex = -1;
-    
-    for (let c = 0; c < headers.length; c++) {
-      if (headers[c] && headers[c].toString().includes(`(ID: ${missionId})`)) {
-        colIndex = c + 1;
-        break;
-      }
-    }
-    
-    if (colIndex === -1) {
-       // Fallback kalau kolom misinya ilang
-       colIndex = Math.max(sheetTim.getLastColumn() + 1, 5); // Pastikan misi mulai dari kolom E (5) ke atas
-       sheetTim.getRange(1, colIndex).setValue(`Misi - ${category} (ID: ${missionId})`);
-       sheetTim.getRange(1, colIndex).setFontWeight("bold").setBackground("#f59e0b").setFontColor("white");
-    }
-    
-    // CARI BARIS TIM
+    // CARI FOLDER ID TIM DI DATA TIM
+    const sheetTim = ss.getSheetByName("Data Tim");
     const sheetTimData = sheetTim.getDataRange().getValues();
     let folderId = "";
-    let rowIndex = -1;
-    let existingContent = "";
     
     for (let i = 1; i < sheetTimData.length; i++) {
       if (sheetTimData[i][1] === nama) {
-        rowIndex = i + 1;
         folderId = sheetTimData[i][2];
-        if (sheetTimData[i][colIndex - 1]) existingContent = sheetTimData[i][colIndex - 1];
         break;
       }
     }
     
-    if (!folderId || rowIndex === -1) return respondError("Tim tidak ditemukan");
+    if (!folderId) return respondError("Tim tidak ditemukan");
     
-    // EKSTRAK LINK FOLDER DARI KONTEN LAMA JIKA ADA
-    let missionFolder;
-    let existingFolderUrl = "";
-    const urlMatch = existingContent.toString().match(/(https:\/\/drive\.google\.com[^\s]+)/);
-    if (urlMatch) existingFolderUrl = urlMatch[0];
-    
-    if (existingFolderUrl) {
-      try {
-        let extractedId = existingFolderUrl.split("/").pop();
-        if (extractedId.includes("?")) extractedId = extractedId.split("?")[0];
-        missionFolder = DriveApp.getFolderById(extractedId);
-      } catch (e) {}
-    }
-    
-    let folderUrl = existingFolderUrl;
+    let folderUrl = "";
     
     // SIMPAN FILE JIKA ADA
     if (fileData) {
-      // BUAT FOLDER BARU JIKA BELUM ADA
-      if (!missionFolder) {
-        const participantFolder = DriveApp.getFolderById(folderId);
-        let categoryFolder = (participantFolder.getFoldersByName(category).hasNext()) ? 
-          participantFolder.getFoldersByName(category).next() : participantFolder.createFolder(category);
-        
-        const folderName = "Misi " + missionId;
-        missionFolder = (categoryFolder.getFoldersByName(folderName).hasNext()) ? 
-          categoryFolder.getFoldersByName(folderName).next() : categoryFolder.createFolder(folderName);
-      }
+      const participantFolder = DriveApp.getFolderById(folderId);
+      let categoryFolder = (participantFolder.getFoldersByName(category).hasNext()) ? 
+        participantFolder.getFoldersByName(category).next() : participantFolder.createFolder(category);
+      
+      const folderName = "Misi " + missionId;
+      let missionFolder = (categoryFolder.getFoldersByName(folderName).hasNext()) ? 
+        categoryFolder.getFoldersByName(folderName).next() : categoryFolder.createFolder(folderName);
       
       const byteCharacters = Utilities.base64Decode(fileData);
       const blob = Utilities.newBlob(byteCharacters, mimeType, fileName);
@@ -318,33 +279,25 @@ function handleUpload(data) {
       folderUrl = missionFolder.getUrl();
     }
     
-    // FORMAT CELL SATU KOTAK
+    // SIMPAN KE SHEET "Data QRIS"
+    let sheetQris = ss.getSheetByName("Data QRIS");
+    if (!sheetQris) {
+      sheetQris = ss.insertSheet("Data QRIS");
+      sheetQris.appendRow(["Timestamp", "Nama Tim", "ID Misi", "Pengumpul", "URL File", "Deskripsi", "Jawaban Form", "URL Folder"]);
+    }
+    
     const timestampStr = Utilities.formatDate(new Date(), "Asia/Jakarta", "dd/MM/yyyy HH:mm:ss");
     
-    let newSubmission = `[Pengumpul: ${memberName || "Anggota"}]\nWaktu: ${timestampStr}`;
-    if (fileData) {
-      newSubmission += `\nLink: ${folderUrl}\n\nDeskripsi:\n${description || "-"}`;
-    } else {
-      newSubmission += `\n(Hanya Jawaban Form)`;
-    }
-    
-    if (formResponses && Array.isArray(formResponses) && formResponses.length > 0) {
-       newSubmission += `\n\n--- JAWABAN FORM ---\n`;
-       formResponses.forEach(r => {
-          newSubmission += `Q: ${r.question}\nA: ${r.answer}\n\n`;
-       });
-    }
-    
-    let cellValue = newSubmission.trim();
-    if (existingContent) {
-       // Append below existing content
-       cellValue = existingContent + "\n\n====================\n\n" + cellValue;
-    }
-    
-    const cell = sheetTim.getRange(rowIndex, colIndex);
-    cell.setValue(cellValue);
-    cell.setWrap(true);
-    cell.setVerticalAlignment("top");
+    sheetQris.appendRow([
+      timestampStr,
+      nama,
+      missionId,
+      memberName || "Anggota",
+      folderUrl ? folderUrl : "", // To keep compatibility with existing frontend expecting folderUrl
+      description || "",
+      JSON.stringify(formResponses || []),
+      folderUrl || ""
+    ]);
     
     return respondSuccess({ message: "File berhasil diupload", folderUrl: folderUrl });
   } catch (error) {
@@ -354,35 +307,47 @@ function handleUpload(data) {
   }
 }
 
-function parseTimMissions(row, headers) {
-  const missions = {};
-  for (let c = 0; c < headers.length; c++) {
-    const colName = headers[c];
-    if (colName && colName.toString().includes("(ID: ")) {
-      const idMatch = colName.toString().match(/\(ID: (.*?)\)/);
-      if (idMatch && idMatch[1]) {
-        const misiId = idMatch[1];
-        const cellContent = row[c] ? row[c].toString() : "";
-        
-        missions[misiId] = { status: "Belum", folderUrl: "", submittedMembers: [], rawContent: cellContent };
-        
-        if (cellContent) {
-           missions[misiId].status = "Selesai";
-           const urlMatch = cellContent.match(/(https:\/\/drive\.google\.com[^\s]+)/);
-           if (urlMatch) missions[misiId].folderUrl = urlMatch[0];
-           
-           const memberRegex = /\[Pengumpul:\s*(.*?)(?:\s*\(.*?\))?\]/g;
-           let match;
-           while ((match = memberRegex.exec(cellContent)) !== null) {
-             if (match[1]) missions[misiId].submittedMembers.push(match[1].trim());
-           }
-           // Remove duplicates
-           missions[misiId].submittedMembers = [...new Set(missions[misiId].submittedMembers)];
-        }
+function buildQrisMap(ss) {
+  const sheetQris = ss.getSheetByName("Data QRIS");
+  const qrisMap = {};
+  
+  if (sheetQris) {
+    const qrisData = sheetQris.getDataRange().getValues();
+    // Start from row 1 to skip header
+    for (let i = 1; i < qrisData.length; i++) {
+      const namaTim = qrisData[i][1];
+      const misiId = qrisData[i][2];
+      const member = qrisData[i][3];
+      const folderUrl = qrisData[i][7] || qrisData[i][4]; // Use column H for folderUrl if available, else E
+      
+      if (!qrisMap[namaTim]) qrisMap[namaTim] = {};
+      if (!qrisMap[namaTim][misiId]) {
+        qrisMap[namaTim][misiId] = { status: "Selesai", folderUrl: folderUrl || "", submittedMembers: [], rawContent: "Disubmit via Data QRIS" };
+      }
+      
+      if (member && !qrisMap[namaTim][misiId].submittedMembers.includes(member)) {
+        qrisMap[namaTim][misiId].submittedMembers.push(member);
+      }
+      if (folderUrl && !qrisMap[namaTim][misiId].folderUrl) {
+        qrisMap[namaTim][misiId].folderUrl = folderUrl;
       }
     }
   }
-  return missions;
+  return qrisMap;
+}
+
+function getBaseMissions(ss) {
+  const sheetMisi = ss.getSheetByName("Pengaturan Misi");
+  const misiData = sheetMisi ? sheetMisi.getDataRange().getValues() : [];
+  const baseMissions = {};
+  
+  for (let i = 1; i < misiData.length; i++) {
+    const misiId = misiData[i][0];
+    if (misiId) {
+      baseMissions[misiId] = { status: "Belum", folderUrl: "", submittedMembers: [], rawContent: "" };
+    }
+  }
+  return baseMissions;
 }
 
 function getParticipantData(nama) {
@@ -399,14 +364,26 @@ function getParticipantData(nama) {
     if (headers[c].toString().toLowerCase().includes("email")) emailCol = c;
   }
   
+  const qrisMap = buildQrisMap(ss);
+  const baseMissions = getBaseMissions(ss);
+  
   for (let i = 1; i < timData.length; i++) {
     if (timData[i][1] === nama) {
+      // Clone base missions
+      const teamMissions = JSON.parse(JSON.stringify(baseMissions));
+      
+      // Overlay QRIS data for this team
+      const teamQris = qrisMap[nama] || {};
+      for (const misiId in teamQris) {
+        teamMissions[misiId] = teamQris[misiId];
+      }
+      
       return respondSuccess({
         "Timestamp": timData[i][0],
         "Nama Tim": timData[i][1],
         "Folder ID Tim": timData[i][2],
         "Email Akses": timData[i][emailCol],
-        "missions": parseTimMissions(timData[i], headers)
+        "missions": teamMissions
       });
     }
   }
@@ -429,13 +406,25 @@ function getAllData() {
     if (headers[c].toString().toLowerCase().includes("email")) emailCol = c;
   }
   
+  const qrisMap = buildQrisMap(ss);
+  const baseMissions = getBaseMissions(ss);
+  
   for (let i = 1; i < timData.length; i++) {
+    const namaTim = timData[i][1];
+    const teamMissions = JSON.parse(JSON.stringify(baseMissions));
+    
+    // Overlay QRIS data for this team
+    const teamQris = qrisMap[namaTim] || {};
+    for (const misiId in teamQris) {
+      teamMissions[misiId] = teamQris[misiId];
+    }
+    
     participants.push({
       "Timestamp": timData[i][0],
       "Nama Tim": timData[i][1],
       "Folder ID Tim": timData[i][2],
       "Email Akses": timData[i][emailCol],
-      "missions": parseTimMissions(timData[i], headers)
+      "missions": teamMissions
     });
   }
   

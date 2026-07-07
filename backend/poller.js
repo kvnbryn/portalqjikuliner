@@ -1,53 +1,79 @@
 const { readSheet, getSheetNames } = require('./googleService');
 const db = require('./db');
 
-// helper function to simulate parseTimMissions
-function parseTimMissions(row, headers) {
-  const missions = {};
-  for (let c = 0; c < headers.length; c++) {
-    const colName = headers[c];
-    if (colName && colName.toString().includes("(ID: ")) {
-      const idMatch = colName.toString().match(/\(ID: (.*?)\)/);
-      if (idMatch && idMatch[1]) {
-        const misiId = idMatch[1];
-        const cellContent = row[c] ? row[c].toString() : "";
-        
-        missions[misiId] = { status: "Belum", folderUrl: "", submittedMembers: [], rawContent: cellContent };
-        
-        if (cellContent) {
-           missions[misiId].status = "Selesai";
-           const urlMatch = cellContent.match(/(https:\/\/drive\.google\.com[^\s]+)/);
-           if (urlMatch) missions[misiId].folderUrl = urlMatch[0];
-           
-           const memberRegex = /\[Pengumpul:\s*(.*?)(?:\s*\(.*?\))?\]/g;
-           let match;
-           while ((match = memberRegex.exec(cellContent)) !== null) {
-             if (match[1]) missions[misiId].submittedMembers.push(match[1].trim());
-           }
-           missions[misiId].submittedMembers = [...new Set(missions[misiId].submittedMembers)];
-        }
-      }
+function buildQrisMap(qrisData) {
+  const qrisMap = {};
+  if (!qrisData || qrisData.length < 2) return qrisMap;
+  
+  for (let i = 1; i < qrisData.length; i++) {
+    const namaTim = qrisData[i][1];
+    const misiId = qrisData[i][2];
+    const member = qrisData[i][3];
+    const folderUrl = qrisData[i][7] || qrisData[i][4];
+    
+    if (!qrisMap[namaTim]) qrisMap[namaTim] = {};
+    if (!qrisMap[namaTim][misiId]) {
+      qrisMap[namaTim][misiId] = { status: "Selesai", folderUrl: folderUrl || "", submittedMembers: [], rawContent: "Disubmit via Data QRIS" };
+    }
+    
+    if (member && !qrisMap[namaTim][misiId].submittedMembers.includes(member)) {
+      qrisMap[namaTim][misiId].submittedMembers.push(member);
+    }
+    if (folderUrl && !qrisMap[namaTim][misiId].folderUrl) {
+      qrisMap[namaTim][misiId].folderUrl = folderUrl;
     }
   }
-  return missions;
+  return qrisMap;
+}
+
+function getBaseMissions(misiData) {
+  const baseMissions = {};
+  if (!misiData || misiData.length < 2) return baseMissions;
+  
+  for (let i = 1; i < misiData.length; i++) {
+    const misiId = misiData[i][0];
+    if (misiId) {
+      baseMissions[misiId] = { status: "Belum", folderUrl: "", submittedMembers: [], rawContent: "" };
+    }
+  }
+  return baseMissions;
 }
 
 async function syncAllData() {
   try {
     console.log('🔄 Polling Data from Google Sheets...');
     
+    const qrisData = await readSheet('Data QRIS').catch(() => []);
+    const misiData = await readSheet('Pengaturan Misi').catch(() => []);
+    
+    const qrisMap = buildQrisMap(qrisData);
+    const baseMissions = getBaseMissions(misiData);
+
     // 1. Sync Data Tim
     const timData = await readSheet('Data Tim');
     if (timData.length > 1) {
       const headers = timData[0];
+      let emailCol = 3;
+      for (let c = 0; c < headers.length; c++) {
+        if (headers[c].toString().toLowerCase().includes("email")) emailCol = c;
+      }
+
       const participants = [];
       for (let i = 1; i < timData.length; i++) {
+        const namaTim = timData[i][1];
+        const teamMissions = JSON.parse(JSON.stringify(baseMissions));
+        
+        const teamQris = qrisMap[namaTim] || {};
+        for (const misiId in teamQris) {
+          teamMissions[misiId] = teamQris[misiId];
+        }
+
         participants.push({
           "Timestamp": timData[i][0],
-          "Nama Tim": timData[i][1],
+          "Nama Tim": namaTim,
           "Folder ID Tim": timData[i][2],
-          "Email Akses": timData[i][3],
-          "missions": parseTimMissions(timData[i], headers)
+          "Email Akses": timData[i][emailCol],
+          "missions": teamMissions
         });
       }
       
