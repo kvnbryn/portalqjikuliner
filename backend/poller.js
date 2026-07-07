@@ -160,8 +160,8 @@ async function syncAllData() {
   }
 }
 
-// Run every 10 seconds
-setInterval(syncAllData, 10000);
+// Run every 30 seconds to prevent Google Apps Script quota limits
+setInterval(syncAllData, 30000);
 
 // Run once immediately on start
 syncAllData();

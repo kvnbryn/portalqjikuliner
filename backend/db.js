@@ -4,6 +4,7 @@ const path = require('path');
 // Initialize database in the same directory
 const dbPath = path.join(__dirname, 'qji_database.sqlite');
 const db = new Database(dbPath, { verbose: console.log });
+db.pragma('journal_mode = WAL');
 
 // Create Tables if they don't exist
 const initDb = () => {

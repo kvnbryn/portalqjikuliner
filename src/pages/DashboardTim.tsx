@@ -213,43 +213,38 @@ export default function DashboardTim() {
         {kategori === "PeKA" ? (
           filteredSettings.length > 0 ? (
             <div className="space-y-6 sm:space-y-8">
-              {/* Header Card */}
-              <div className="bg-white rounded-[2rem] p-6 sm:p-10 border border-slate-200 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 mb-8">
-                  <div>
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">Hub Edukasi PeKA</h2>
-                    {filteredSettings[0].deskripsi && (
-                      <div 
-                        className="text-slate-600 font-medium leading-relaxed max-w-2xl prose-p:mb-2 prose-strong:font-bold prose-strong:text-slate-800"
-                        dangerouslySetInnerHTML={{ __html: filteredSettings[0].deskripsi }}
-                      />
-                    )}
-                  </div>
-                  <div className="shrink-0 flex gap-5 sm:gap-8 text-center bg-slate-50 border border-slate-100 p-4 sm:px-6 rounded-2xl self-start">
-                    <div>
-                      <p className="text-3xl font-black text-slate-900">{pekaStats.formCount}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Kuesioner</p>
-                    </div>
-                    <div className="w-px bg-slate-200"></div>
-                    <div>
-                      <p className="text-3xl font-black text-slate-900">{pekaStats.docCount}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Foto Upload</p>
-                    </div>
-                  </div>
+              {/* Clean Professional Header */}
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm mb-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Misi Aktif</span>
                 </div>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">Hub Edukasi PeKA</h2>
+                {filteredSettings[0].deskripsi && (
+                  <div 
+                    className="text-slate-600 font-medium leading-relaxed max-w-3xl text-sm sm:text-base prose-p:mb-2 prose-strong:text-slate-800"
+                    dangerouslySetInnerHTML={{ __html: filteredSettings[0].deskripsi }}
+                  />
+                )}
+              </div>
 
-                {/* Link & QR Section */}
-                <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 sm:p-8">
-                  <p className="text-sm font-extrabold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <ExternalLink size={18} /> Link Publik Kuesioner
-                  </p>
+              {/* Functional Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Card 1: Share Link */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col h-full">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-1">
+                      <ExternalLink size={18} className="text-primary" /> Bagikan Kuesioner
+                    </h3>
+                    <p className="text-sm text-slate-500">Salin link ini dan bagikan ke warga untuk diisi.</p>
+                  </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="flex-1 bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm font-mono text-slate-700 break-all flex items-center shadow-sm">
-                      {filteredSettings[0].formSchema ? `${filteredSettings[0].formSchema}${encodeURIComponent(userName)}` : "Link belum diset admin"}
-                    </div>
-                    
-                    <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                  <div className="mt-auto">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-700 truncate flex items-center">
+                        {filteredSettings[0].formSchema ? `${filteredSettings[0].formSchema}${encodeURIComponent(userName)}` : "Link belum diset"}
+                      </div>
                       <button 
                         onClick={() => {
                           if (filteredSettings[0].formSchema) {
@@ -259,98 +254,122 @@ export default function DashboardTim() {
                             toast.error("Link belum tersedia");
                           }
                         }}
-                        className="bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md"
+                        className="bg-primary hover:bg-primary-dark text-white px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shrink-0"
                       >
-                        <Copy size={18} strokeWidth={2.5} /> <span className="sm:hidden lg:inline">Salin Link</span>
-                      </button>
-                      <button 
-                        onClick={() => {
-                          if (filteredSettings[0].formSchema) {
-                            setShowQrCode(true);
-                          } else {
-                            toast.error("Link belum tersedia");
-                          }
-                        }}
-                        className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm"
-                      >
-                        <QrCode size={18} strokeWidth={2.5} /> <span className="sm:hidden lg:inline">Tampilkan QR</span>
+                        <Copy size={16} /> Salin Link
                       </button>
                     </div>
+                    <button 
+                      onClick={() => {
+                        if (filteredSettings[0].formSchema) {
+                          setShowQrCode(true);
+                        } else {
+                          toast.error("Link belum tersedia");
+                        }
+                      }}
+                      className="w-full mt-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                    >
+                      <QrCode size={16} /> Tampilkan QR Code
+                    </button>
                   </div>
                 </div>
-              </div>
 
-              {/* Bulk Upload Section */}
-              <div className="bg-slate-900 text-white rounded-[2rem] p-6 sm:p-10 border border-slate-800 shadow-lg relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-                
-                <h3 className="text-2xl font-black mb-3 relative z-10 tracking-tight">Upload Bukti Dokumentasi</h3>
-                <p className="text-slate-400 font-medium mb-6 relative z-10 text-sm max-w-2xl leading-relaxed">
-                  Upload foto-foto bukti edukasi PeKA di sini. Anda bisa memilih banyak foto sekaligus (Bulk Upload).
-                </p>
-                
-                <div className="relative z-10 flex flex-col sm:flex-row gap-4 items-center">
-                  <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*"
-                    id="peka-bulk-upload"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const files = Array.from(e.target.files || []);
-                      if (files.length === 0) return;
-                      
-                      const validFiles = files.filter(f => f.size <= 5 * 1024 * 1024);
-                      if (validFiles.length < files.length) {
-                        toast.error("Beberapa file diabaikan karena ukurannya melebihi 5MB.");
-                      }
-                      if (validFiles.length === 0) return;
+                {/* Card 2: Upload Bukti */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col h-full">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-1">
+                      <Camera size={18} className="text-primary" /> Upload Bukti Foto
+                    </h3>
+                    <p className="text-sm text-slate-500">Pilih dan upload foto-foto dokumentasi (maks 5MB/foto).</p>
+                  </div>
 
-                      setIsUploadingPhoto("bulk");
-                      const loadingToast = toast.loading(`Mengupload ${validFiles.length} foto secara bersamaan...`);
-                      
-                      try {
-                        let successCount = 0;
-                        await Promise.all(validFiles.map(async (file) => {
-                           const timestamp = new Date().toISOString();
-                           const namaWarga = "Bulk Upload";
-                           const res = await uploadPekaPhotoAPI(timestamp, namaWarga, userName, file);
-                           if (res.status === "success") successCount++;
-                        }));
+                  <div className="mt-auto relative">
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*"
+                      id="peka-bulk-upload"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length === 0) return;
                         
-                        toast.success(`${successCount} dari ${validFiles.length} foto berhasil diupload!`, { id: loadingToast });
-                        fetchSettings();
-                      } catch (err) {
-                        toast.error("Terjadi kesalahan saat upload bulk.", { id: loadingToast });
-                      } finally {
-                        setIsUploadingPhoto(null);
-                        e.target.value = '';
-                      }
-                    }}
-                  />
-                  <label 
-                    htmlFor="peka-bulk-upload"
-                    className={`w-full sm:w-auto bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-3 cursor-pointer ${isUploadingPhoto === 'bulk' ? 'opacity-50 pointer-events-none' : ''}`}
-                  >
-                    {isUploadingPhoto === 'bulk' ? <Loader2 size={20} className="animate-spin" /> : <Camera size={20} strokeWidth={2.5} />}
-                    {isUploadingPhoto === 'bulk' ? "Sedang Mengupload..." : "Pilih & Upload Banyak Foto"}
-                  </label>
-                  <p className="text-xs text-slate-500 font-bold tracking-widest uppercase">Format Foto • Maks 5MB/file</p>
-                </div>
-              </div>
+                        const validFiles = files.filter(f => f.size <= 5 * 1024 * 1024);
+                        if (validFiles.length < files.length) {
+                          toast.error("Beberapa file diabaikan karena ukurannya melebihi 5MB.");
+                        }
+                        if (validFiles.length === 0) return;
 
-              {/* Checklist Edukasi */}
-              <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-                <div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Total Responden: <span className="text-primary">{pekaResponses.length}</span></h3>
-                  <p className="text-sm text-slate-500 font-medium max-w-md leading-relaxed">Daftar warga yang telah mengisi kuesioner dari link tim Anda. Klik tombol di samping untuk melihat daftar lengkap, mencari nama, dan mengurutkan data.</p>
+                        setIsUploadingPhoto("bulk");
+                        const loadingToast = toast.loading(`Mengupload ${validFiles.length} foto...`);
+                        
+                        try {
+                          let successCount = 0;
+                          await Promise.all(validFiles.map(async (file) => {
+                             const timestamp = new Date().toISOString();
+                             const namaWarga = "Bulk Upload";
+                             const res = await uploadPekaPhotoAPI(timestamp, namaWarga, userName, file);
+                             if (res.status === "success") successCount++;
+                          }));
+                          
+                          toast.success(`${successCount} dari ${validFiles.length} foto berhasil diupload!`, { id: loadingToast });
+                          fetchSettings();
+                        } catch (err) {
+                          toast.error("Terjadi kesalahan saat upload.", { id: loadingToast });
+                        } finally {
+                          setIsUploadingPhoto(null);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                    <label 
+                      htmlFor="peka-bulk-upload"
+                      className={`w-full border-2 border-dashed border-slate-300 hover:border-primary hover:bg-slate-50 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${isUploadingPhoto === 'bulk' ? 'opacity-50 pointer-events-none' : ''}`}
+                    >
+                      {isUploadingPhoto === 'bulk' ? (
+                        <>
+                          <Loader2 size={24} className="text-slate-400 animate-spin" />
+                          <span className="text-sm font-bold text-slate-600">Sedang Mengupload...</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="bg-slate-100 p-3 rounded-full text-slate-500">
+                            <Upload size={20} />
+                          </div>
+                          <span className="text-sm font-bold text-primary">Klik untuk Pilih Foto</span>
+                          <span className="text-xs text-slate-400">Bisa pilih banyak foto sekaligus</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
                 </div>
-                <button 
-                  onClick={() => navigate('/responden')} 
-                  className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-2xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 shrink-0"
-                >
-                  <Users size={18} /> Lihat Detail Responden
-                </button>
+
+                {/* Card 3: Statistik & Responden (Full Width) */}
+                <div className="md:col-span-2 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="flex-1 flex gap-6 sm:gap-10 items-center justify-center sm:justify-start w-full">
+                    <div className="text-center sm:text-left">
+                       <p className="text-4xl font-black text-slate-900">{pekaResponses.length}</p>
+                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Total Responden</p>
+                    </div>
+                    <div className="w-px h-12 bg-slate-200 hidden sm:block"></div>
+                    <div className="text-center sm:text-left">
+                       <p className="text-2xl font-bold text-slate-700">{pekaStats.formCount}</p>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Kuesioner</p>
+                    </div>
+                    <div className="w-px h-12 bg-slate-200 hidden sm:block"></div>
+                    <div className="text-center sm:text-left">
+                       <p className="text-2xl font-bold text-slate-700">{pekaStats.docCount}</p>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Foto Upload</p>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => navigate('/responden')} 
+                    className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shrink-0"
+                  >
+                    <Users size={16} /> Lihat Daftar Responden
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
