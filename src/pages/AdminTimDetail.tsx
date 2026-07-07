@@ -64,7 +64,7 @@ export default function AdminTimDetail() {
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [missionFilesCache, setMissionFilesCache] = useState<Record<string, any[]>>({});
   
-  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+  const [lightboxData, setLightboxData] = useState<{ url: string, description?: string, date?: string } | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("QRIS");
 
   // PeKA States
@@ -311,7 +311,7 @@ export default function AdminTimDetail() {
                               <div className="h-40 w-full overflow-hidden bg-slate-100 relative">
                                 <img src={displayUrl} alt={file.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <button onClick={() => setLightboxImg(displayUrl)} className="bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-primary transition-colors">
+                                  <button onClick={() => setLightboxData({ url: displayUrl, description: file.description, date: file.date })} className="bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-primary transition-colors">
                                     <Maximize2 size={20} />
                                   </button>
                                 </div>
@@ -491,7 +491,7 @@ export default function AdminTimDetail() {
                           if (isVideo || isPDF) {
                             window.open(res.photoUrl, "_blank");
                           } else {
-                            setLightboxImg(getDriveDirectUrl(res.photoUrl));
+                            setLightboxData({ url: getDriveDirectUrl(res.photoUrl) });
                           }
                         }}
                         className="group block aspect-square rounded-2xl bg-slate-100 overflow-hidden relative border border-slate-200 hover:border-primary hover:shadow-md transition-all cursor-pointer"
@@ -572,24 +572,39 @@ export default function AdminTimDetail() {
 
       {/* Lightbox for Images */}
       <AnimatePresence>
-        {lightboxImg && (
+        {lightboxData && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-10">
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="absolute inset-0 bg-black/90 backdrop-blur-sm cursor-pointer"
-              onClick={() => setLightboxImg(null)}
+              onClick={() => setLightboxData(null)}
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="relative z-10 max-w-5xl w-full max-h-full flex items-center justify-center"
+              className="relative z-10 max-w-5xl w-full max-h-full flex flex-col items-center justify-center"
             >
               <button 
-                onClick={() => setLightboxImg(null)}
-                className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
+                onClick={() => setLightboxData(null)}
+                className="absolute -top-12 right-0 md:-right-12 p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
               >
                 <X size={24} />
               </button>
-              <img src={lightboxImg} alt="Preview" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl" />
+              <img src={lightboxData.url} alt="Preview" className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl" />
+              
+              {(lightboxData.description || lightboxData.date) && (
+                <div className="mt-4 bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl text-white max-w-3xl w-full text-center shadow-2xl border border-white/20 flex flex-col gap-2">
+                  {lightboxData.date && (
+                    <p className="text-xs font-bold text-white/60 uppercase tracking-widest flex items-center justify-center gap-1">
+                      <Clock size={12}/> {lightboxData.date}
+                    </p>
+                  )}
+                  {lightboxData.description && (
+                    <p className="text-base sm:text-lg font-medium text-white/90 leading-relaxed italic">
+                      "{lightboxData.description}"
+                    </p>
+                  )}
+                </div>
+              )}
             </motion.div>
           </div>
         )}

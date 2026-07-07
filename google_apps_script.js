@@ -451,7 +451,8 @@ function getMissionFiles(folderUrl) {
         mimeType: file.getMimeType(),
         url: file.getUrl(),
         downloadUrl: `https://lh3.googleusercontent.com/d/${file.getId()}`,
-        description: file.getDescription() || ""
+        description: file.getDescription() || "",
+        date: file.getDateCreated() ? Utilities.formatDate(file.getDateCreated(), Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss") : ""
       });
     }
     return respondSuccess(files);

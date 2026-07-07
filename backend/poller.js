@@ -6,14 +6,17 @@ function buildQrisMap(qrisData) {
   if (!qrisData || qrisData.length < 2) return qrisMap;
   
   for (let i = 1; i < qrisData.length; i++) {
+    const timestamp = qrisData[i][0] || "";
     const namaTim = qrisData[i][1];
     const misiId = qrisData[i][2];
-    const member = qrisData[i][3];
-    const folderUrl = qrisData[i][7] || qrisData[i][4];
+    const member = qrisData[i][3] || "Unknown";
+    const folderUrl = qrisData[i][7] || qrisData[i][4] || "";
+    const deskripsi = qrisData[i][5] || "-";
+    const jawabanForm = qrisData[i][6] || "[]";
     
     if (!qrisMap[namaTim]) qrisMap[namaTim] = {};
     if (!qrisMap[namaTim][misiId]) {
-      qrisMap[namaTim][misiId] = { status: "Selesai", folderUrl: folderUrl || "", submittedMembers: [], rawContent: "Disubmit via Data QRIS" };
+      qrisMap[namaTim][misiId] = { status: "Selesai", folderUrl: folderUrl, submittedMembers: [], rawContent: "" };
     }
     
     if (member && !qrisMap[namaTim][misiId].submittedMembers.includes(member)) {
@@ -21,6 +24,25 @@ function buildQrisMap(qrisData) {
     }
     if (folderUrl && !qrisMap[namaTim][misiId].folderUrl) {
       qrisMap[namaTim][misiId].folderUrl = folderUrl;
+    }
+    
+    let submissionString = `[Pengumpul: ${member}]\nWaktu: ${timestamp}\nLink: ${folderUrl}\nDeskripsi:\n${deskripsi}`;
+    if (jawabanForm && jawabanForm !== "[]" && jawabanForm !== "") {
+      try {
+        const parsedAnswers = JSON.parse(jawabanForm);
+        if (parsedAnswers.length > 0) {
+          submissionString += "\n\n--- JAWABAN FORM ---\n";
+          parsedAnswers.forEach(ans => {
+            submissionString += `Q: ${ans.question}\nA: ${ans.answer}\n\n`;
+          });
+        }
+      } catch(e) {}
+    }
+    
+    if (qrisMap[namaTim][misiId].rawContent) {
+      qrisMap[namaTim][misiId].rawContent += "\n====================\n" + submissionString;
+    } else {
+      qrisMap[namaTim][misiId].rawContent = submissionString;
     }
   }
   return qrisMap;
