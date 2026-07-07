@@ -1,4 +1,18 @@
 const GAS_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_GAS_URL;
+const DIRECT_GAS_URL = import.meta.env.VITE_GAS_URL;
+
+// Helper to safely parse JSON
+const safeJson = async (response: Response) => {
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error(`Invalid JSON response: ${text.substring(0, 50)}...`);
+  }
+};
 
 export async function registerParticipant(nama: string) {
   try {
@@ -12,7 +26,7 @@ export async function registerParticipant(nama: string) {
         nama: nama
       }),
     });
-    return await response.json();
+    return await safeJson(response);
   } catch (error) {
     console.error("Error registering:", error);
     throw error;
@@ -156,12 +170,12 @@ export async function editParticipantAPI(oldNama: string, newNama: string, email
 
 export async function getMissionSettingsAPI() {
   try {
-    const response = await fetch(GAS_URL, {
+    const response = await fetch(DIRECT_GAS_URL || GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "getMissionSettings" })
     });
-    return await response.json();
+    return await safeJson(response);
   } catch (error) {
     console.error("Error fetching mission settings:", error);
     throw error;
@@ -170,7 +184,7 @@ export async function getMissionSettingsAPI() {
 
 export async function updateMissionSettingAPI(missionId: string | number, deskripsi: string, deadline: string, statusManual: string, kategori?: string, formSchema?: string, visibility?: boolean, requiresForm?: boolean) {
   try {
-    const response = await fetch(GAS_URL, {
+    const response = await fetch(DIRECT_GAS_URL || GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ 
@@ -185,7 +199,7 @@ export async function updateMissionSettingAPI(missionId: string | number, deskri
         requiresForm
       })
     });
-    return await response.json();
+    return await safeJson(response);
   } catch (error) {
     console.error("Error updating mission setting:", error);
     throw error;
