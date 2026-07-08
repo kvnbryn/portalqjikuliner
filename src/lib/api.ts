@@ -72,6 +72,20 @@ export async function createTeamAPI(nama: string, emails: string) {
   }
 }
 
+export async function getPekaFolderAPI(namaTim: string) {
+  try {
+    const response = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "getPekaFolder", namaTim })
+    });
+    return await safeJson(response);
+  } catch (error) {
+    console.error("Error getting PeKA folder:", error);
+    throw error;
+  }
+}
+
 export async function uploadMissionData(nama: string, missionId: string | number, fileBase64: string, fileName: string, mimeType: string, description: string = "", memberName: string = "", formResponses: any[] = []) {
   try {
     const response = await fetch(DIRECT_GAS_URL || GAS_URL, {

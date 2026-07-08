@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Upload, CheckCircle2, X, FileVideo, Image as ImageIcon, Loader2, LogOut, ChevronRight, ExternalLink, Copy, Camera, QrCode, AlertTriangle, Users } from "lucide-react";
 import toast from "react-hot-toast";
 import QRCode from "react-qr-code";
-import { uploadMissionData, getParticipantData, getMissionSettingsAPI, getPekaStatsAPI, getPekaResponsesAPI, uploadPekaPhotoAPI } from "../lib/api";
+import { uploadMissionData, getParticipantData, getMissionSettingsAPI, getPekaStatsAPI, getPekaResponsesAPI, getPekaFolderAPI } from "../lib/api";
 
 export default function DashboardTim() {
   const [userName, setUserName] = useState("");
@@ -28,6 +28,7 @@ export default function DashboardTim() {
   // PeKA Stats
   const [pekaStats, setPekaStats] = useState({ formCount: 0, docCount: 0 });
   const [pekaResponses, setPekaResponses] = useState<any[]>([]);
+  const [pekaFolderId, setPekaFolderId] = useState<string>("");
   const [showQrCode, setShowQrCode] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
@@ -107,6 +108,16 @@ export default function DashboardTim() {
         const data = res.data;
         if (data["Folder ID Tim"]) {
           setParticipantFolderId(data["Folder ID Tim"]);
+        }
+        if (kategori === "PeKA") {
+          try {
+            const pekaFolderRes = await getPekaFolderAPI(name);
+            if (pekaFolderRes.status === "success" && pekaFolderRes.data?.folderId) {
+              setPekaFolderId(pekaFolderRes.data.folderId);
+            }
+          } catch (e) {
+            console.error("Gagal get Peka folder:", e);
+          }
         }
         
         if (data.missions) {
@@ -298,12 +309,12 @@ export default function DashboardTim() {
                     <p className="text-sm text-slate-500 mb-6">Silakan upload seluruh foto/video kegiatan PeKA ke dalam Google Drive tim Anda.</p>
                   </div>
                   <a 
-                    href={`https://drive.google.com/drive/folders/${participantFolderId}`}
+                    href={`https://drive.google.com/drive/folders/${pekaFolderId || participantFolderId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-blue-200"
                   >
-                    Buka Google Drive Tim
+                    Buka Folder PeKA di Google Drive
                   </a>
                 </div>
 
