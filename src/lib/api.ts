@@ -1,5 +1,5 @@
-const GAS_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_GAS_URL;
-const DIRECT_GAS_URL = import.meta.env.VITE_GAS_URL;
+const GAS_URL = import.meta.env.DEV ? "http://localhost:3001/api" : "/api";
+const DIRECT_GAS_URL = "";
 
 // Helper to safely parse JSON
 const safeJson = async (response: Response) => {
