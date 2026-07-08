@@ -289,74 +289,22 @@ export default function DashboardTim() {
                   </div>
                 </div>
 
-                {/* Card 2: Upload Bukti */}
-                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col h-full">
+                {/* Card 2: Link Google Drive */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col h-full justify-center text-center">
                   <div className="mb-4">
-                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-1">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center justify-center gap-2 mb-1">
                       <Camera size={18} className="text-primary" /> Upload Bukti Dokumentasi
                     </h3>
-                    <p className="text-sm text-slate-500">Pilih dan upload file dokumentasi (Foto/Video/PDF, maks 5MB/file).</p>
+                    <p className="text-sm text-slate-500 mb-6">Silakan upload seluruh foto/video kegiatan PeKA ke dalam Google Drive tim Anda.</p>
                   </div>
-
-                  <div className="mt-auto relative">
-                    <input 
-                      type="file" 
-                      multiple 
-                      accept="*/*"
-                      id="peka-bulk-upload"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const files = Array.from(e.target.files || []);
-                        if (files.length === 0) return;
-                        
-                        const validFiles = files.filter(f => f.size <= 5 * 1024 * 1024);
-                        if (validFiles.length < files.length) {
-                          toast.error("Beberapa file diabaikan karena ukurannya melebihi 5MB.");
-                        }
-                        if (validFiles.length === 0) return;
-
-                        setIsUploadingPhoto("bulk");
-                        const loadingToast = toast.loading(`Mengupload ${validFiles.length} file...`);
-                        
-                        try {
-                          let successCount = 0;
-                          await Promise.all(validFiles.map(async (file, index) => {
-                             const timestamp = new Date().toISOString() + "_" + index;
-                             const namaWarga = file.name;
-                             const res = await uploadPekaPhotoAPI(timestamp, namaWarga, userName, file);
-                             if (res.status === "success") successCount++;
-                          }));
-                          
-                          toast.success(`${successCount} dari ${validFiles.length} file berhasil diupload!`, { id: loadingToast });
-                          fetchSettings();
-                        } catch (err) {
-                          toast.error("Terjadi kesalahan saat upload.", { id: loadingToast });
-                        } finally {
-                          setIsUploadingPhoto(null);
-                          e.target.value = '';
-                        }
-                      }}
-                    />
-                    <label 
-                      htmlFor="peka-bulk-upload"
-                      className={`w-full border-2 border-dashed border-slate-300 hover:border-primary hover:bg-slate-50 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${isUploadingPhoto === 'bulk' ? 'opacity-50 pointer-events-none' : ''}`}
-                    >
-                      {isUploadingPhoto === 'bulk' ? (
-                        <>
-                          <Loader2 size={24} className="text-slate-400 animate-spin" />
-                          <span className="text-sm font-bold text-slate-600">Sedang Mengupload...</span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="bg-slate-100 p-3 rounded-full text-slate-500">
-                            <Upload size={20} />
-                          </div>
-                          <span className="text-sm font-bold text-primary">Klik untuk Pilih File</span>
-                          <span className="text-xs text-slate-400">Bisa pilih banyak file sekaligus</span>
-                        </>
-                      )}
-                    </label>
-                  </div>
+                  <a 
+                    href={`https://drive.google.com/drive/folders/${participantFolderId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-blue-200"
+                  >
+                    Buka Google Drive Tim
+                  </a>
                 </div>
 
                 {/* Card 3: Statistik & Responden (Full Width) */}
