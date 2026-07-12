@@ -1,4 +1,4 @@
-const GAS_URL = import.meta.env.DEV ? "http://localhost:3001/api" : "/api";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyohKtxgtIWL4BQhuFo4ql32KB0eHY5TZ880r5jJqoKFq_mkVvhkWQ_0WuIuKZSnGcK5Q/exec";
 const DIRECT_GAS_URL = "";
 
 // Helper to safely parse JSON
